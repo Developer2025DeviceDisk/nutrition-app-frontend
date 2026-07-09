@@ -39,7 +39,7 @@ export default function VerifyOtp() {
         if (data.user && data.user.fullName) {
           router.replace("/(tabs)/" as any);
         } else {
-          router.replace("/(auth)/pet-details" as any);
+          router.replace("/(auth)/owner-details" as any);
         }
       } else {
         Alert.alert("Error", data.message || "Invalid OTP");
@@ -83,15 +83,15 @@ export default function VerifyOtp() {
 
 
   return (
-    <View className="flex-1 bg-[#07141D] px-6 pt-16">
+    <View className="flex-1 bg-background px-6 pt-16">
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="#DDE6F0" />
+      <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(auth)/" as any)}>
+        <Ionicons name="arrow-back" size={24} color="#43483F" />
       </TouchableOpacity>
 
       {/* Title */}
-      <Text className="text-[#DDE6F0] text-[28px] font-semibold my-10 leading-tight">
-        Please enter the{"\n"}verification code
+      <Text className="text-[#191D17] text-[24px] font-semibold my-10 leading-tight">
+        Please enter the verification code
       </Text>
 
       {/* OTP Input */}
@@ -100,35 +100,57 @@ export default function VerifyOtp() {
         onChangeText={setOtp}
         keyboardType="number-pad"
         maxLength={6}
-        className="text-[#DDE6F0] text-[28px] tracking-[15px] border-b border-[#444] pb-3"
+        className="text-text text-[32px] tracking-[15px] border-b border-secondary pb-3"
       />
 
       {/* Info Text */}
-      <Text className="text-[#888] text-sm mt-5 leading-5">
-        We have sent verification code to the phone number{"\n"}
-        <Text className="text-[#DDE6F0]">+91 {phone}</Text>.{" "}
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-[#7ED6D1]">Change phone number?</Text>
+      <View className="flex-row flex-wrap items-center pt-5">
+        <Text className="text-[#43483F] text-[13px] leading-5">
+          We have sent verification code to the phone number{" "}
+        </Text>
+
+        <Text className="text-text font-medium text-[13px] leading-5">
+          +91 {phone}.
+        </Text>
+
+        <TouchableOpacity
+          onPress={() =>
+            router.canGoBack()
+              ? router.back()
+              : router.replace("/(auth)/" as any)
+          }
+        >
+          <Text className="text-primary font-medium text-[13px] leading-5 ml-1">
+            Change phone number?
+          </Text>
         </TouchableOpacity>
-      </Text>
+      </View>
 
       {/* Resend Code */}
       <TouchableOpacity className="mt-16 items-center" onPress={handleResendOtp}>
-        <Text className="text-[#7ED6D1] text-base">Resend Code</Text>
+        <Text className="text-primary font-medium text-base">Resend Code</Text>
       </TouchableOpacity>
 
       {/* Continue Button */}
-      <TouchableOpacity
-        className="mt-auto mb-5 bg-primary py-4 rounded-full items-center"
-        onPress={handleVerifyOtp}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#001F2B" />
-        ) : (
-          <Text className="text-[#001F2B] font-semibold text-base">Continue</Text>
-        )}
-      </TouchableOpacity>
+      <View className="mt-auto mb-16">
+        <TouchableOpacity
+          className="bg-primary py-2 rounded-[12px] items-center shadow-sm"
+          onPress={handleVerifyOtp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text className="text-white font-semibold text-base">Continue</Text>
+          )}
+        </TouchableOpacity>
+
+        <Text className="text-[#43483F] text-[11px] leading-[18px] font-medium text-center mt-3 px-4">
+          By Login, you are accepting our{" "}
+          <Text className="text-primary font-medium">Terms & Condition</Text> and{" "}
+          <Text className="text-primary font-medium">Privacy & Policy</Text>
+        </Text>
+      </View>
     </View>
   );
 }

@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL, BASE_URL } from '../../constants/api';
+import { appendFormFile } from '../../utils/fileUpload';
 
 const SOCKET_URL = API_URL.replace('/api', '');
 
@@ -149,14 +150,7 @@ export default function ChatRoomScreen() {
             const formData = new FormData();
             formData.append('matchId', id as string);
 
-            const filename = mediaPreview.uri.split('/').pop() || `media_${Date.now()}`;
-            const ext = filename.split('.').pop()?.toLowerCase() || 'jpg';
-            const mimeType = mediaPreview.type === 'video'
-                ? `video/${ext === 'mov' ? 'quicktime' : ext}`
-                : `image/${ext}`;
-
-            // @ts-ignore
-            formData.append('media', { uri: mediaPreview.uri, name: filename, type: mimeType });
+            await appendFormFile(formData, 'media', mediaPreview.uri);
 
             const response = await fetch(`${API_URL}/chat/send-media`, {
                 method: 'POST',
@@ -252,7 +246,7 @@ export default function ChatRoomScreen() {
         >
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/" as any)} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color="#DDE6F0" />
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>

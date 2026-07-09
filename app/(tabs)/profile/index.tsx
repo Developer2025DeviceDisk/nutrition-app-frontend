@@ -1,117 +1,118 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import { BASE_URL, API_URL } from '../../../constants/api';
 
-export default function ProfileScreen() {
-  const router = useRouter();
+export default function AnalysisScreen() {
   const { user, token, logout } = useAuth();
-  const [pets, setPets] = useState<any[]>([]);
+  const router = useRouter();
+  
+  const [dailyStats, setDailyStats] = useState({
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+  });
 
-  useEffect(() => {
-    const fetchMyPets = async () => {
-      try {
-        const response = await fetch(`${API_URL}/pet/my-pets`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setPets(data.pets);
+  useFocusEffect(
+    useCallback(() => {
+        if (token) {
+            fetchDailyStats();
         }
-      } catch (error) {
-        console.error("Error fetching my pets", error);
-      }
-    };
-    if (token) fetchMyPets();
-  }, [token]);
+    }, [token])
+  );
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/(auth)/phone-number' as any);
+  const fetchDailyStats = async () => {
+      try {
+          const response = await fetch(`${API_URL}/scan/daily`, {
+              headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.success && data.totals) {
+              setDailyStats({
+                  calories: data.totals.calories || 0,
+                  protein: data.totals.protein || 0,
+                  carbs: data.totals.carbs || 0,
+                  fat: data.totals.fat || 0
+              });
+          }
+      } catch (error) {
+          console.error("Failed to fetch daily stats", error);
+      }
   };
 
-  const getPetNamesStr = () => {
-    if (pets.length === 0) return "";
-    const names = pets.map(p => p.petName).join(', ');
-    return names.length > 20 ? names.substring(0, 18) + '...' : names;
+  const handleLogout = async () => {
+    try {
+        await logout();
+        // Force navigation to onboarding
+        router.replace('/(auth)/' as any);
+    } catch (error) {
+        console.error("Logout failed", error);
+    }
   };
 
   return (
-    <LinearGradient
-      colors={["#0E1514", "#4D4639"]}
-      style={{ flex: 1 }}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    >
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 40, paddingTop: 60 }} showsVerticalScrollIndicator={false}>
-
-          {/* Header Section */}
-          <View className="flex-row items-center px-6 mb-8 mt-4">
-
-            {/* Avatar Header */}
-            <View className="w-16 h-16 rounded-full overflow-hidden mr-4 border-2 border-[#7ED6D1]">
-              <Image
-                source={{
-                  uri: pets && pets.length > 0 && pets[0].images && pets[0].images.length > 0
-                    ? `${BASE_URL}${pets[0].images[0].replace(/\\/g, '/')}`
-                    : user?.profileImage
-                      ? `${BASE_URL}${user.profileImage.replace(/\\/g, '/')}` // Clean user profile image just in case
-                      : "https://images.unsplash.com/photo-1552053831-71594a27632d"
-                }}
-                className="w-full h-full"
-                style={{ width: 64, height: 64 }}
-                contentFit="cover"
-              />
-            </View>
-
-            {/* Title and Edit Link */}
-            <View className="flex-1 justify-center ml-2">
-              <Text className="text-[#DDE6F0] text-lg font-semibold mb-1" numberOfLines={1}>
-                {user?.fullName || 'Owner'} {pets.length > 0 ? `& ${getPetNamesStr()}` : ''}
-              </Text>
-              <TouchableOpacity onPress={() => router.push('/profile/edit' as any)}>
-                {/* <Text className="text-[#EAC16C] text-sm tracking-wide">Update Pet Profiles</Text> */}
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <ScrollView className="flex-1 px-6 pt-10">
+        <Text className="text-[#191D17] text-3xl font-bold mb-8">Analysis</Text>
+        
+        {/* User Card */}
+        <View className="flex-row items-center bg-[#F8F9F5] p-6 rounded-[24px] mb-8">
+          <Image
+            source={{ uri: user?.profileImage ? `${BASE_URL}${user.profileImage}` : "https://images.unsplash.com/photo-1633332755192-727a05c4013d" }}
+            className="w-20 h-20 rounded-2xl"
+            contentFit="cover"
+          />
+          <View className="ml-4">
+            <Text className="text-[#191D17] text-xl font-bold">{user?.fullName || "User"}</Text>
+            <Text className="text-[#8C8C8C] text-sm">Member since Mar 2026</Text>
           </View>
+        </View>
 
-          {/* Thin Divider Line */}
-          <View className="h-px bg-[#3A4A55]/40 mx-6 mb-8" />
+        {/* Daily Stats */}
+        <Text className="text-[#191D17] text-xl font-bold mb-4">Today's Intake</Text>
+        <View className="gap-y-4">
+           <AnalysisItem icon="flame-outline" label="Calories" value={`${dailyStats.calories} kcal`} color="#FF8C00" />
+           <AnalysisItem icon="fitness-outline" label="Protein" value={`${dailyStats.protein} g`} color="#416834" />
+           <AnalysisItem icon="water-outline" label="Carbs" value={`${dailyStats.carbs} g`} color="#3297FF" />
+           <AnalysisItem icon="restaurant-outline" label="Fat" value={`${dailyStats.fat} g`} color="#FF4D4D" />
+        </View>
 
-          {/* Menu Items */}
-          <View className="px-6">
-            {/* <MenuLink icon="person-outline" label="My Profile" onPress={() => router.push('/profile/edit' as any)} /> */}
-            {/* <MenuLink icon="ban-outline" label="Blocked Chats" onPress={() => {}} /> */}
-            <MenuLink icon="help-circle-outline" label="Help" onPress={() => router.push('/help' as any)} />
-            {/* <MenuLink icon="sunny-outline" label="Light/Dark Mode" onPress={() => { }} /> */}
-            <MenuLink icon="information-circle-outline" label="Privacy & Policy" onPress={() => router.push('/privacy' as any)} />
-            <MenuLink icon="information-circle-outline" label="About Us" onPress={() => router.push('/about' as any)} />
+        {dailyStats.calories === 0 && (
+            <View className="mt-10 p-10 bg-[#F0F2EB] rounded-[32px] items-center">
+                <Ionicons name="stats-chart" size={48} color="#416834" opacity={0.3} />
+                <Text className="text-[#8C8C8C] text-center mt-4">
+                    Scan your meals today to track your nutrition analysis.
+                </Text>
+            </View>
+        )}
 
-            <MenuLink icon="log-out-outline" label="Logout" onPress={handleLogout} isLast />
-          </View>
-
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+        {/* Logout Button */}
+        <TouchableOpacity 
+            activeOpacity={0.7}
+            onPress={handleLogout}
+            className="mt-10 mb-20 flex-row items-center justify-center p-5 bg-[#FFF0F0] rounded-[24px] border border-[#FFDADA]"
+        >
+            <Ionicons name="log-out-outline" size={24} color="#FF4D4D" />
+            <Text className="text-[#FF4D4D] text-lg font-bold ml-3">Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-// Reusable elegant menu item
-const MenuLink = ({ icon, label, onPress, isLast = false }: { icon: any, label: string, onPress: () => void, isLast?: boolean }) => (
-  <TouchableOpacity
-    className={`flex-row justify-between items-center py-5 ${!isLast ? 'border-b border-[#3A4A55]/0' : ''}`}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <View className="flex-row items-center">
-      <Ionicons name={icon} size={22} color="#DDE6F0" style={{ opacity: 0.8 }} />
-      <Text className="text-[#DDE6F0] text-[17px] font-normal tracking-wide ml-4">{label}</Text>
+const AnalysisItem = ({ icon, label, value, color }: any) => (
+    <View className="flex-row items-center justify-between bg-white border border-[#F0F0F0] p-5 rounded-[20px]">
+        <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-full justify-center items-center" style={{ backgroundColor: color + '15' }}>
+                <Ionicons name={icon} size={20} color={color} />
+            </View>
+            <Text className="text-[#191D17] text-base font-medium ml-3">{label}</Text>
+        </View>
+        <Text className="text-[#191D17] text-lg font-bold">{value}</Text>
     </View>
-    <Ionicons name="chevron-forward" size={20} color="#DDE6F0" style={{ opacity: 0.5 }} />
-  </TouchableOpacity>
 );

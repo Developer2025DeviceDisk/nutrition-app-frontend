@@ -9,13 +9,13 @@ import "../global.css";
 
 const toastConfig: ToastConfig = {
   otp: ({ text1, props, text2 }) => (
-    <View className="w-[90%] bg-[#0f2430] border border-[#7ED6D1]/30 rounded-2xl p-4 flex-row items-center shadow-lg shadow-black/50 mt-10">
-      <View className="bg-[#7ED6D1]/20 rounded-full p-2 mr-4">
-        <Ionicons name="shield-checkmark" size={28} color="#7ED6D1" />
+    <View className="w-[90%] bg-white border border-primary/30 rounded-2xl p-4 flex-row items-center shadow-lg shadow-black/10 mt-10">
+      <View className="bg-primary/10 rounded-full p-2 mr-4">
+        <Ionicons name="shield-checkmark" size={28} color="#416834" />
       </View>
       <View className="flex-1">
-        <Text className="text-[#888] text-sm mb-1">{text1 || 'Verification Code'}</Text>
-        <Text className="text-[#DDE6F0] text-3xl font-bold tracking-[8px]">{text2}</Text>
+        <Text className="text-muted text-sm mb-1">{text1 || 'Verification Code'}</Text>
+        <Text className="text-text text-3xl font-bold tracking-[8px]">{text2}</Text>
       </View>
     </View>
   )
@@ -32,8 +32,8 @@ function InitialLayout() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#07141D' }}>
-        <ActivityIndicator size="large" color="#7ED6D1" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color="#416834" />
       </View>
     );
   }
@@ -50,7 +50,7 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <InitialLayout />
       <Toast config={toastConfig} />
     </AuthProvider>

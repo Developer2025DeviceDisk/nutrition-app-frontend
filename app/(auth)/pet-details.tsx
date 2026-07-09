@@ -20,7 +20,7 @@ import { Image } from "expo-image";
 import { API_URL } from "../../constants/api";
 import { useAuth } from "../../context/AuthContext";
 import { DOG_BREEDS } from "../../constants/breeds";
-import { getUploadableUri } from "../../utils/fileUpload";
+import { getUploadableUri, appendFormFile } from "../../utils/fileUpload";
 
 const GOALS = ["Find Mate", "Play Date", "Both"];
 const GENDERS = ["Male", "Female"];
@@ -118,12 +118,7 @@ export default function PetDetails() {
             formData.append("goal", selectedGoal);
 
             for (const uri of images) {
-                const fileUri = await getUploadableUri(uri);
-                const filename = fileUri.split('/').pop() || `image_${Date.now()}.jpg`;
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : "image/jpeg";
-                // @ts-ignore
-                formData.append("images", { uri: fileUri, name: filename, type });
+                await appendFormFile(formData, "images", uri);
             }
 
             const response = await fetch(`${API_URL}/pet`, {
@@ -177,7 +172,7 @@ export default function PetDetails() {
                 }}
                 activeOpacity={0.8}
             >
-                <Text className={value ? "text-[#DDE6F0] text-[15px]" : "text-[#888] text-[15px]"}>
+                <Text className={value ? "text-text text-[15px]" : "text-muted text-[15px]"}>
                     {value || placeholder}
                 </Text>
                 <Ionicons
@@ -186,16 +181,16 @@ export default function PetDetails() {
                     color="#888"
                 />
             </TouchableOpacity>
-            <View className="h-px bg-[#2A3A45]" />
+            <View className="h-px bg-secondary" />
             {openDropdown === field && field !== "breed" && (
-                <View className="bg-[#1C2B35] rounded-lg mt-1 overflow-hidden">
+                <View className="bg-secondary/20 rounded-lg mt-1 overflow-hidden border border-secondary">
                     {options.map((opt) => (
                         <TouchableOpacity
                             key={opt}
-                            className="px-4 py-3 border-b border-[#2A3A45]"
+                            className="px-4 py-3 border-b border-secondary/30"
                             onPress={() => selectOption(field, opt)}
                         >
-                            <Text className="text-[#DDE6F0] text-sm">{opt}</Text>
+                            <Text className="text-text text-sm">{opt}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -214,20 +209,20 @@ export default function PetDetails() {
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                className="flex-1 bg-black/90 justify-end"
+                className="flex-1 bg-black/60 justify-end"
             >
-                <View className="bg-[#07141D] h-[80%] rounded-t-3xl p-5 border-t border-[#3A4A55]">
+                <View className="bg-background h-[80%] rounded-t-3xl p-5 border-t border-secondary">
                     <View className="flex-row justify-between items-center mb-5">
-                        <Text className="text-[#EAC16C] text-xl font-bold">Select Breed</Text>
+                        <Text className="text-primary text-xl font-bold">Select Breed</Text>
                         <TouchableOpacity onPress={() => setBreedModalVisible(false)}>
-                            <Ionicons name="close" size={28} color="#888" />
+                            <Ionicons name="close" size={28} color="#43483F" />
                         </TouchableOpacity>
                     </View>
 
-                    <View className="flex-row items-center bg-[#1C2B35] rounded-xl px-4 py-2 mb-4 border border-[#2A3A45]">
+                    <View className="flex-row items-center bg-secondary/10 rounded-xl px-4 py-2 mb-4 border border-secondary">
                         <Ionicons name="search" size={20} color="#888" />
                         <TextInput
-                            className="flex-1 text-[#DDE6F0] text-base ml-2 py-2"
+                            className="flex-1 text-text text-base ml-2 py-2"
                             placeholder="Search breed..."
                             placeholderTextColor="#888"
                             value={breedSearch}
@@ -247,21 +242,21 @@ export default function PetDetails() {
                         showsVerticalScrollIndicator={false}
                         renderItem={({ item }) => (
                             <TouchableOpacity
-                                className={`py-4 border-b border-[#2A3A45] flex-row justify-between items-center`}
+                                className={`py-4 border-b border-secondary/30 flex-row justify-between items-center`}
                                 onPress={() => {
                                     selectOption("breed", item);
                                     setBreedModalVisible(false);
                                 }}
                             >
-                                <Text className={breed === item ? "text-[#EAC16C] font-semibold text-base" : "text-[#DDE6F0] text-base"}>
+                                <Text className={breed === item ? "text-primary font-semibold text-base" : "text-text text-base"}>
                                     {item}
                                 </Text>
-                                {breed === item && <Ionicons name="checkmark" size={20} color="#EAC16C" />}
+                                {breed === item && <Ionicons name="checkmark" size={20} color="#416834" />}
                             </TouchableOpacity>
                         )}
                         ListEmptyComponent={() => (
                             <View className="py-10 items-center">
-                                <Text className="text-[#888] text-base text-center">No breeds found</Text>
+                                <Text className="text-muted text-base text-center">No breeds found</Text>
                             </View>
                         )}
                     />
@@ -271,18 +266,18 @@ export default function PetDetails() {
     );
 
     return (
-        <View className="flex-1 bg-[#07141D]">
+        <View className="flex-1 bg-background">
             <ScrollView
                 contentContainerStyle={{ padding: 25, paddingTop: 60 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
                 {/* Title */}
-                <Text className="text-[#7ED6D1] text-[28px] font-bold mb-2 leading-9">
+                <Text className="text-primary text-[28px] font-bold mb-2 leading-9">
                     Please share some{"\n"}details of pet
                 </Text>
 
-                <Text className="text-[#888] text-[13px] mb-1">
+                <Text className="text-muted text-[13px] mb-1">
                     Add at least {MIN_PHOTOS} clear photos of your pet*
                 </Text>
 
@@ -346,7 +341,7 @@ export default function PetDetails() {
                 <View className="h-6" />
 
                 {/* Primary Goal */}
-                <Text className="text-[#7ED6D1] text-base font-semibold mb-4">
+                <Text className="text-primary text-base font-semibold mb-4">
                     Primary Goal
                 </Text>
                 <View className="flex-row gap-3 mb-7">
@@ -354,12 +349,12 @@ export default function PetDetails() {
                         <TouchableOpacity
                             key={g}
                             className={`px-4 py-2 rounded-full border ${selectedGoal === g
-                                ? "border-[#7ED6D1]"
-                                : "border-[#3A4A55]"
+                                ? "border-primary bg-primary/5"
+                                : "border-secondary bg-transparent"
                                 }`}
                             onPress={() => setSelectedGoal(g)}
                         >
-                            <Text className={selectedGoal === g ? "text-[#DDE6F0] font-semibold text-sm" : "text-[#888] text-sm"}>
+                            <Text className={selectedGoal === g ? "text-primary font-semibold text-sm" : "text-muted text-sm"}>
                                 {g}
                             </Text>
                         </TouchableOpacity>
@@ -369,13 +364,13 @@ export default function PetDetails() {
                 {/* Pet Name */}
                 <View className="mb-5">
                     <TextInput
-                        className="text-[#DDE6F0] text-[15px] py-2"
+                        className="text-text text-[15px] py-2"
                         placeholder="Pet Name*"
                         placeholderTextColor="#888"
                         value={petName}
                         onChangeText={(text) => setPetName(text.replace(/[^a-zA-Z\s]/g, ""))}
                     />
-                    <View className="h-px bg-[#2A3A45]" />
+                    <View className="h-px bg-secondary" />
                 </View>
 
                 {renderDropdown("breed", "Pet Breed*", breed, DOG_BREEDS)}
@@ -384,7 +379,7 @@ export default function PetDetails() {
 
                 {/* ── Multi-select Health Badges ── */}
                 <View className="mb-5">
-                    <Text className="text-[#7ED6D1] text-base font-semibold mb-3">
+                    <Text className="text-primary text-base font-semibold mb-3">
                         Health Badges
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
@@ -401,7 +396,7 @@ export default function PetDetails() {
                                     activeOpacity={0.7}
                                 >
                                     {selected && (
-                                        <Ionicons name="checkmark-circle" size={16} color="#07141D" style={{ marginRight: 5 }} />
+                                        <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" style={{ marginRight: 5 }} />
                                     )}
                                     <Text style={[
                                         styles.badgeChipText,
@@ -426,16 +421,16 @@ export default function PetDetails() {
             </ScrollView>
 
             {/* Next Button */}
-            <View className="absolute bottom-0 left-0 right-0 px-6 pb-10 bg-[#07141D]">
+            <View className="absolute bottom-0 left-0 right-0 px-6 pb-10 bg-background/95">
                 <TouchableOpacity
-                    className="bg-primary py-4 rounded-full items-center"
+                    className="bg-primary py-4 rounded-full items-center shadow-sm"
                     onPress={handleNext}
                     disabled={loading}
                 >
                     {loading ? (
-                        <ActivityIndicator color="#001F2B" />
+                        <ActivityIndicator color="#FFFFFF" />
                     ) : (
-                        <Text className="text-[#001F2B] font-bold text-base">Next</Text>
+                        <Text className="text-white font-bold text-base">Next</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -450,12 +445,12 @@ const styles = StyleSheet.create({
     addPhotoBtn: {
         width: 70,
         height: 70,
-        backgroundColor: '#1C2B35',
+        backgroundColor: '#F2F4F7',
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'transparent',
+        borderColor: '#DDE6F0',
     },
     addPhotoBtnError: {
         borderColor: '#FF6B6B',
@@ -481,13 +476,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     photoCountHint: {
-        color: '#EAC16C',
+        color: '#416834',
         fontSize: 12,
         marginTop: 4,
         marginBottom: 2,
     },
     photoCountOk: {
-        color: '#7ED6D1',
+        color: '#416834',
         fontSize: 12,
         marginTop: 4,
         marginBottom: 2,
@@ -502,25 +497,25 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
     },
     badgeChipSelected: {
-        backgroundColor: '#7ED6D1',
-        borderColor: '#7ED6D1',
+        backgroundColor: '#416834',
+        borderColor: '#416834',
     },
     badgeChipUnselected: {
         backgroundColor: 'transparent',
-        borderColor: '#3A4A55',
+        borderColor: '#DDE6F0',
     },
     badgeChipText: {
         fontSize: 13,
         fontWeight: '600',
     },
     badgeChipTextSelected: {
-        color: '#07141D',
+        color: '#FFFFFF',
     },
     badgeChipTextUnselected: {
         color: '#888',
     },
     selectedBadgesHint: {
-        color: '#7ED6D1',
+        color: '#416834',
         fontSize: 12,
         marginTop: 8,
         opacity: 0.8,

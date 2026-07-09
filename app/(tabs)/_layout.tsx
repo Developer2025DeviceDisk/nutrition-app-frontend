@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -43,7 +44,7 @@ export default function TabLayout() {
             options={{
               title: "Home",
               tabBarIcon: ({ color }) => (
-                <IconSymbol size={26} name="house.fill" color={color} />
+                <Ionicons size={26} name="home-outline" color={color} />
               ),
             }}
           />
@@ -51,20 +52,32 @@ export default function TabLayout() {
           <Tabs.Screen
             name="chat"
             options={{
-              title: "Chat",
+              title: "Scan",
               tabBarIcon: ({ color }) => (
-                <IconSymbol size={26} name="bubble.left.fill" color={color} />
+                <View style={{
+                    width: 60,
+                    height: 60,
+                    backgroundColor: '#416834',
+                    borderRadius: 30,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: 30,
+                    borderWidth: 4,
+                    borderColor: '#0F1110'
+                }}>
+                    <Ionicons size={30} name="scan-outline" color="#FFFFFF" />
+                </View>
               ),
             }}
           />
           <Tabs.Screen
             name="profile"
             options={{
-              title: "Profile",
+              title: "Analysis",
               tabBarIcon: ({ color }) => (
-                <IconSymbol
+                <Ionicons
                   size={26}
-                  name="person.crop.circle.fill"
+                  name="stats-chart-outline"
                   color={color}
                 />
               ),

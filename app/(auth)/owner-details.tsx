@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -10,39 +9,28 @@ import {
     TouchableOpacity,
     View,
     Alert,
-    ActivityIndicator
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform
 } from "react-native";
 import { Image } from "expo-image";
 import { API_URL } from "../../constants/api";
 import { useAuth } from "../../context/AuthContext";
-import { getUploadableUri } from "../../utils/fileUpload";
+import { getUploadableUri, appendFormFile } from "../../utils/fileUpload";
 
-const STATES = [
-    "Andhra Pradesh", "Delhi", "Gujarat", "Karnataka",
-    "Maharashtra", "Rajasthan", "Tamil Nadu", "Uttar Pradesh", "West Bengal",
-];
-
-const CITIES: Record<string, string[]> = {
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik"],
-    "Karnataka": ["Bengaluru", "Mysuru", "Hubli", "Mangaluru"],
-    "Delhi": ["New Delhi", "Dwarka", "Rohini", "Saket"],
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem"],
-    "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi"],
-    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Siliguri"],
-    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati"],
-    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota"],
-};
+const GENDERS = ["Male", "Female", "Other"];
 
 export default function OwnerDetails() {
     const router = useRouter();
-    const { token } = useAuth();
+    const { token, updateUser } = useAuth();
 
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [selectedState, setSelectedState] = useState("");
-    const [selectedCity, setSelectedCity] = useState("");
+    const [age, setAge] = useState("");
+    const [gender, setGender] = useState("");
+    const [height, setHeight] = useState("");
+    const [weight, setWeight] = useState("");
     const [image, setImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -56,7 +44,8 @@ export default function OwnerDetails() {
 
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
-            allowsEditing: false,
+            allowsEditing: true,
+            aspect: [1, 1],
             quality: 0.8,
         });
 
@@ -65,46 +54,8 @@ export default function OwnerDetails() {
         }
     };
 
-    const handleAutoDetectLocation = async () => {
-        setLoading(true);
-        try {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Permission to access location was denied');
-                return;
-            }
-
-            let location = await Location.getCurrentPositionAsync({});
-            let reverseGeocode = await Location.reverseGeocodeAsync({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            });
-
-            if (reverseGeocode.length > 0) {
-                const address = reverseGeocode[0];
-                const detectedState = address.region || "";
-                const detectedCity = address.city || address.district || address.subregion || "";
-
-                if (detectedState) {
-                    // Try to match with our list or set directly if it's a new state
-                    setSelectedState(detectedState);
-                    if (detectedCity) {
-                        setSelectedCity(detectedCity);
-                    }
-                } else {
-                    Alert.alert("Location Detected", `We found you in ${detectedCity}, but couldn't determine the state.`);
-                }
-            }
-        } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "Could not detect location. Please try again or select manually.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleNext = async () => {
-        if (!fullName || !email || !selectedState || !selectedCity) {
+        if (!fullName || !email || !age || !gender || !height || !weight) {
             Alert.alert("Error", "Please fill in all required fields.");
             return;
         }
@@ -120,16 +71,14 @@ export default function OwnerDetails() {
             const formData = new FormData();
             formData.append("fullName", fullName);
             formData.append("email", email);
-            formData.append("state", selectedState);
-            formData.append("city", selectedCity);
+            formData.append("phone", phone);
+            formData.append("age", age);
+            formData.append("gender", gender);
+            formData.append("height", height);
+            formData.append("weight", weight);
 
             if (image) {
-                const fileUri = await getUploadableUri(image);
-                const filename = fileUri.split('/').pop() || `profile_${Date.now()}.jpg`;
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : "image/jpeg";
-                // @ts-ignore - React Native FormData accepts { uri, name, type }
-                formData.append("profileImage", { uri: fileUri, name: filename, type });
+                await appendFormFile(formData, "profileImage", image);
             }
 
             const response = await fetch(`${API_URL}/user/profile`, {
@@ -143,6 +92,8 @@ export default function OwnerDetails() {
             const data = await response.json();
 
             if (data.success) {
+                // Update global state with the full user object
+                await updateUser(data.user);
                 router.replace("/(tabs)/" as any);
             } else {
                 Alert.alert("Error", data.message || "Failed to save profile details");
@@ -158,208 +109,165 @@ export default function OwnerDetails() {
     const toggleDropdown = (field: string) =>
         setOpenDropdown(openDropdown === field ? null : field);
 
-    const selectState = (value: string) => {
-        setSelectedState(value);
-        setSelectedCity("");
-        setOpenDropdown(null);
-    };
-
-    const selectCity = (value: string) => {
-        setSelectedCity(value);
-        setOpenDropdown(null);
-    };
-
-    const cityOptions = selectedState ? (CITIES[selectedState] || []) : [];
-
     return (
-        <View className="flex-1 bg-[#07141D]">
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1 bg-white"
+        >
             <ScrollView
-                contentContainerStyle={{ padding: 25, paddingTop: 60 }}
+                className="flex-1"
+                contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Back Button */}
-                <TouchableOpacity onPress={() => router.back()} className="mb-7">
-                    <Ionicons name="arrow-back" size={24} color="#DDE6F0" />
-                </TouchableOpacity>
-
-                {/* Title */}
-                <Text className="text-[#7ED6D1] text-[28px] font-bold mb-2 leading-9">
-                    Please share details of{"\n"}yours profile
+                {/* Header Title */}
+                <Text className="text-[#191D17] text-[24px] font-bold text-center mb-10">
+                    Create Profile
                 </Text>
 
-                <Text className="text-[#888] text-[13px] mb-5">
-                    Make sure the profile images to be clear*
-                </Text>
+                {/* Profile Image Picker */}
+                <View className="items-center mb-10">
+                    <TouchableOpacity
+                        className="w-24 h-24 bg-[#E5E8E1] rounded-[20px] justify-center items-center overflow-hidden"
+                        activeOpacity={0.8}
+                        onPress={pickImage}
+                    >
+                        {image ? (
+                            <Image
+                                source={{ uri: image }}
+                                style={{ width: '100%', height: '100%' }}
+                                contentFit="cover"
+                            />
+                        ) : (
+                            <Ionicons name="camera-outline" size={32} color="#43483F" />
+                        )}
+                    </TouchableOpacity>
+                </View>
 
-                {/* Image Upload */}
-                <TouchableOpacity
-                    className="w-[70px] h-[70px] bg-[#1C2B35] rounded-xl justify-center items-center mb-8 overflow-hidden"
-                    activeOpacity={0.8}
-                    onPress={pickImage}
-                >
-                    {image ? (
-                        <Image
-                            source={{ uri: image }}
-                            style={{ width: '100%', height: '100%' }}
-                            contentFit="cover"
+                {/* Input Fields */}
+                <View className="gap-y-6">
+                    {/* Full Name */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TextInput
+                            className="text-black text-[16px] py-1"
+                            placeholder="Full Name*"
+                            placeholderTextColor="#8C8C8C"
+                            value={fullName}
+                            onChangeText={setFullName}
                         />
-                    ) : (
-                        <Ionicons name="add-circle-outline" size={28} color="#888" />
-                    )}
-                </TouchableOpacity>
-
-                {/* Full Name */}
-                <View className="mb-5">
-                    <TextInput
-                        className="text-[#DDE6F0] text-[15px] py-2"
-                        placeholder="Full Name*"
-                        placeholderTextColor="#888"
-                        value={fullName}
-                        onChangeText={(text) => {
-                            // Allow only letters and spaces
-                            const filteredText = text.replace(/[^a-zA-Z\s]/g, "");
-                            setFullName(filteredText);
-                        }}
-                    />
-                    <View className="h-px bg-[#2A3A45]" />
-                </View>
-
-                {/* Email */}
-                <View className="mb-5">
-                    <TextInput
-                        className="text-[#DDE6F0] text-[15px] py-2"
-                        placeholder="Email*"
-                        placeholderTextColor="#888"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        value={email}
-                        onChangeText={setEmail}
-                    />
-                    <View className="h-px bg-[#2A3A45]" />
-                </View>
-
-                {/* Phone */}
-                <View className="flex-row items-center py-2 mb-1">
-                    <View className="flex-row items-center mr-3 gap-1">
-                        <Text className="text-[#DDE6F0] text-[15px]">IND +91</Text>
-                        <Ionicons name="chevron-down" size={14} color="#888" />
                     </View>
-                    <View className="w-px h-5 bg-[#2A3A45] mr-3" />
-                    <TextInput
-                        className="flex-1 text-[#DDE6F0] text-[15px]"
-                        placeholder="Phone Number"
-                        placeholderTextColor="#888"
-                        keyboardType="phone-pad"
-                        value={phone}
-                        maxLength={10}
-                        onChangeText={(text) => {
-                            const cleaned = text.replace(/[^0-9]/g, "");
-                            setPhone(cleaned);
-                        }}
-                    />
-                </View>
-                <View className="h-px bg-[#2A3A45] mb-6" />
 
-                {/* Location */}
-                <Text className="text-[#7ED6D1] text-base font-semibold mt-2 mb-2">
-                    Your Location
-                </Text>
-
-                {/* State Dropdown */}
-                <View className="mb-1">
-                    <TouchableOpacity
-                        className="flex-row justify-between items-center py-3"
-                        onPress={() => toggleDropdown("state")}
-                        activeOpacity={0.8}
-                    >
-                        <Text className={selectedState ? "text-[#DDE6F0] text-[15px]" : "text-[#888] text-[15px]"}>
-                            {selectedState || "State*"}
-                        </Text>
-                        <Ionicons
-                            name={openDropdown === "state" ? "chevron-up" : "chevron-down"}
-                            size={18}
-                            color="#888"
+                    {/* Email */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TextInput
+                            className="text-black text-[16px] py-1"
+                            placeholder="Email*"
+                            placeholderTextColor="#8C8C8C"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={email}
+                            onChangeText={setEmail}
                         />
-                    </TouchableOpacity>
-                    <View className="h-px bg-[#2A3A45]" />
-                    {openDropdown === "state" && (
-                        <View className="bg-[#1C2B35] rounded-lg mt-1 overflow-hidden">
-                            {STATES.map((s) => (
-                                <TouchableOpacity
-                                    key={s}
-                                    className="px-4 py-3 border-b border-[#2A3A45]"
-                                    onPress={() => selectState(s)}
-                                >
-                                    <Text className="text-[#DDE6F0] text-sm">{s}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
+                    </View>
 
-                {/* City Dropdown */}
-                <View className="mb-1">
-                    <TouchableOpacity
-                        className="flex-row justify-between items-center py-3"
-                        onPress={() => selectedState && toggleDropdown("city")}
-                        activeOpacity={0.8}
-                    >
-                        <Text className={selectedCity ? "text-[#DDE6F0] text-[15px]" : "text-[#888] text-[15px]"}>
-                            {selectedCity || "City*"}
-                        </Text>
-                        <Ionicons
-                            name={openDropdown === "city" ? "chevron-up" : "chevron-down"}
-                            size={18}
-                            color="#888"
+                    {/* Phone Number */}
+                    <View className="flex-row items-center ">
+                        <TouchableOpacity className="flex-row items-center pb-1 mr-3">
+                            <Text className="text-[#191D17] text-[16px] border-b border-[#C1C1C1]">IND +91</Text>
+                        </TouchableOpacity>
+                        <TextInput
+                            className="flex-1 text-[#191D17] text-[16px] py-1 border-b border-[#C1C1C1] pl- 3"
+                            placeholder="Phone Number"
+                            placeholderTextColor="#8C8C8C"
+                            keyboardType="phone-pad"
+                            value={phone}
+                            onChangeText={setPhone}
                         />
-                    </TouchableOpacity>
-                    <View className="h-px bg-[#2A3A45]" />
-                    {openDropdown === "city" && (
-                        <View className="bg-[#1C2B35] rounded-lg mt-1 overflow-hidden">
-                            {cityOptions.map((c) => (
-                                <TouchableOpacity
-                                    key={c}
-                                    className="px-4 py-3 border-b border-[#2A3A45]"
-                                    onPress={() => selectCity(c)}
-                                >
-                                    <Text className="text-[#DDE6F0] text-sm">{c}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                    </View>
+
+                    {/* Age */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TextInput
+                            className="text-black text-[16px] py-1"
+                            placeholder="Age (In Years)*"
+                            placeholderTextColor="#8C8C8C"
+                            keyboardType="numeric"
+                            value={age}
+                            onChangeText={setAge}
+                        />
+                    </View>
+
+                    {/* Gender */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TouchableOpacity
+                            className="flex-row justify-between items-center py-1"
+                            onPress={() => toggleDropdown("gender")}
+                        >
+                            <Text className={gender ? "text-black text-[16px]" : "text-[#8C8C8C] text-[16px]"}>
+                                {gender || "Gender*"}
+                            </Text>
+                            <Ionicons name="chevron-down" size={18} color="#000" />
+                        </TouchableOpacity>
+                        {openDropdown === "gender" && (
+                            <View className="bg-white border border-[#C1C1C1] rounded-lg mt-1 absolute top-10 left-0 right-0 z-50">
+                                {GENDERS.map((g) => (
+                                    <TouchableOpacity
+                                        key={g}
+                                        className="px-4 py-3 border-b border-[#F0F0F0]"
+                                        onPress={() => {
+                                            setGender(g);
+                                            setOpenDropdown(null);
+                                        }}
+                                    >
+                                        <Text className="text-black">{g}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Height */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TextInput
+                            className="text-black text-[16px] py-1"
+                            placeholder="Height (In CMM)*"
+                            placeholderTextColor="#8C8C8C"
+                            keyboardType="numeric"
+                            value={height}
+                            onChangeText={setHeight}
+                        />
+                    </View>
+
+                    {/* Weight */}
+                    <View className="border-b border-[#C1C1C1]">
+                        <TextInput
+                            className="text-black text-[16px] py-1"
+                            placeholder="Weight (In KG)*"
+                            placeholderTextColor="#8C8C8C"
+                            keyboardType="numeric"
+                            value={weight}
+                            onChangeText={setWeight}
+                        />
+                    </View>
                 </View>
-
-                {/* Auto detect 
-                <TouchableOpacity 
-                    className="items-center mt-5" 
-                    activeOpacity={0.7}
-                    onPress={handleAutoDetectLocation}
-                    disabled={loading}
-                >
-                    <Text className="text-[#7ED6D1] text-[15px]">
-                        {loading ? "Detecting..." : "Auto detect location"}
-                    </Text>
-                </TouchableOpacity> */}
-
-                <View className="h-24" />
             </ScrollView>
 
-            {/* Next Button */}
-            <View className="absolute bottom-0 left-0 right-0 px-6 pb-10 bg-[#07141D]">
+            {/* Bottom Button */}
+            <View className="absolute bottom-10 left-5 right-5">
                 <TouchableOpacity
-                    className="bg-primary py-4 rounded-full items-center"
+                    className="bg-[#416834] py-3 rounded-[10px] items-center"
                     onPress={handleNext}
                     disabled={loading}
+                    activeOpacity={0.8}
                 >
                     {loading ? (
-                        <ActivityIndicator color="#001F2B" />
+                        <ActivityIndicator color="#FFFFFF" />
                     ) : (
-                        <Text className="text-[#001F2B] font-bold text-base">Next</Text>
+                        <Text className="text-white font-semibold text-[16px]">Get started</Text>
                     )}
                 </TouchableOpacity>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 }
 

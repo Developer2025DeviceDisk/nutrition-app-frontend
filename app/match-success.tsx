@@ -22,7 +22,7 @@ export default function MatchSuccessScreen() {
                             style={styles.matchImage}
                         />
                         <View style={styles.pawBadgeLeft}>
-                            <Ionicons name="paw" size={20} color="#7ED6D1" />
+                            <Ionicons name="paw" size={20} color="#416834" />
                         </View>
                     </View>
                     <View style={[styles.imageWrapper, styles.imageRotateRight]}>
@@ -31,7 +31,7 @@ export default function MatchSuccessScreen() {
                             style={styles.matchImage}
                         />
                         <View style={styles.pawBadgeRight}>
-                            <Ionicons name="paw" size={20} color="#7ED6D1" />
+                            <Ionicons name="paw" size={20} color="#416834" />
                         </View>
                     </View>
                 </View>
@@ -54,7 +54,7 @@ export default function MatchSuccessScreen() {
 
                     <TouchableOpacity
                         style={styles.keepSwipingButton}
-                        onPress={() => router.back()}
+                        onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/" as any)}
                     >
                         <Text style={styles.keepSwipingText}>Keep swiping</Text>
                     </TouchableOpacity>
@@ -67,7 +67,7 @@ export default function MatchSuccessScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#07141D',
+        backgroundColor: '#FFFFFF',
     },
     content: {
         flex: 1,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
         marginBottom: 60,
     },
     congratsText: {
-        color: '#7ED6D1',
+        color: '#416834',
         fontSize: 18,
         letterSpacing: 2,
         fontWeight: '600',
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         gap: 15,
     },
     sayHelloText: {
-        color: '#07141D',
+        color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold',
     },

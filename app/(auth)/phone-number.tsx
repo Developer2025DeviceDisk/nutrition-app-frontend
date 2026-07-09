@@ -60,49 +60,57 @@ export default function PhoneNumber() {
 
 
   return (
-    <View className="flex-1 bg-[#07141D] px-6 pt-16">
+    <View className="flex-1 bg-background px-6 pt-16">
       {/* Back Button */}
-      <TouchableOpacity onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color="#DDE6F0" />
+      <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(auth)/" as any)}>
+        <Ionicons name="arrow-back" size={24} color="#43483F" />
       </TouchableOpacity>
 
-      <Text className="text-[#B2C8E8] text-[32px] font-semibold my-10 leading-tight">
+      <Text className="text-text text-[32px] font-semibold my-10 leading-tight">
         Can we get your{"\n"}number?
       </Text>
 
       {/* Input Row */}
-      <View className="flex-row items-center border-b border-[#444] pb-3">
-        <Text className="text-[#DDE6F0] mr-4">IND +91</Text>
+      <View className="flex-row items-center border-b border-secondary pb-3">
+        <Text className="text-text mr-4 font-medium">IND +91</Text>
         <TextInput
           placeholder="Phone Number"
-          placeholderTextColor="#888"
+          placeholderTextColor="#888888"
           keyboardType="phone-pad"
-          className="flex-1 text-[#DDE6F0] text-base"
+          className="flex-1 text-text text-lg"
           value={phone}
           onChangeText={setPhone}
           maxLength={10}
         />
       </View>
 
-      <Text className="text-[#BEC9C8] text-[13px] mt-5 leading-5">
+      <Text className="text-muted text-[13px] mt-5 leading-5">
         We'll send you a code to verify you are really you.{"\n"}
         Message and data rates may apply
       </Text>
 
-      {/* Button */}
-      <TouchableOpacity
-        className="mt-auto mb-12 bg-primary py-4 rounded-full items-center"
-        onPress={handleSendOtp}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#001F2B" />
-        ) : (
-          <Text className="text-[#001F2B] font-semibold text-base">
-            Send verification code
-          </Text>
-        )}
-      </TouchableOpacity>
+      {/* Bottom Container for Button and Legal Text */}
+      <View className="mt-auto mb-10 gap-6">
+        <TouchableOpacity
+          className="bg-primary py-2 rounded-[12px] items-center shadow-sm"
+          onPress={handleSendOtp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text className="text-white font-semibold text-base">
+              Send verification code
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <Text className="text-muted text-center text-sm px-4">
+          By Login, you are accepting our{" "}
+          <Text className="text-primary font-medium" onPress={() => { }}>Terms & Condition</Text> and{" "}
+          <Text className="text-primary font-medium" onPress={() => { }}>Privacy & Policy</Text>
+        </Text>
+      </View>
     </View>
   );
 }

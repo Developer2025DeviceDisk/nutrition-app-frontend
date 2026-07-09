@@ -160,7 +160,7 @@ export default function FilterScreen() {
 
                 <TouchableOpacity
                     onPress={onPress}
-                    className={`w-6 h-6 rounded-md border items-center justify-center ${value ? "bg-[#EAC16C] border-[#EAC16C]" : "border-gray-500"
+                    className={`w-6 h-6 rounded-md border items-center justify-center ${value ? "bg-[#416834] border-[#416834]" : "border-gray-500"
                         }`}
                 >
                     <Animated.View
@@ -179,14 +179,14 @@ export default function FilterScreen() {
         <View className="flex-1 bg-black pt-14 px-5">
             {/* Header */}
             <View className="flex-row justify-between items-center mb-5">
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/" as any)}>
                     <Ionicons name="arrow-back" size={24} color="#DDE6F0" />
                 </TouchableOpacity>
 
                 <Text className="text-[#DDE6F0] text-xl font-bold">Filters</Text>
 
                 <TouchableOpacity onPress={clearFilters}>
-                    <Text className="text-[#EAC16C] text-sm font-semibold">Clear Filter</Text>
+                    <Text className="text-[#416834] text-sm font-semibold">Clear Filter</Text>
                 </TouchableOpacity>
             </View>
 
@@ -201,7 +201,7 @@ export default function FilterScreen() {
                 </Text>
 
                 <View className="items-center mb-2">
-                    <View className="bg-[#EAC16C] px-3 py-1 rounded-md mb-1">
+                    <View className="bg-[#416834] px-3 py-1 rounded-md mb-1">
                         <Text className="text-[#3B2F15] font-semibold">{distance} km</Text>
                     </View>
                 </View>
@@ -212,9 +212,9 @@ export default function FilterScreen() {
                     step={1}
                     value={distance}
                     onValueChange={setDistance}
-                    minimumTrackTintColor="#EAC16C"
+                    minimumTrackTintColor="#416834"
                     maximumTrackTintColor="#555"
-                    thumbTintColor="#EAC16C"
+                    thumbTintColor="#416834"
                 />
 
                 <View className="flex-row justify-between mt-1">
@@ -229,7 +229,7 @@ export default function FilterScreen() {
                         setBreedSearch("");
                         setBreedModalVisible(true);
                     }}>
-                        <Text className="text-[#EAC16C] font-semibold text-sm">+ Select Breeds</Text>
+                        <Text className="text-[#416834] font-semibold text-sm">+ Select Breeds</Text>
                     </TouchableOpacity>
                 </View>
                 
@@ -237,10 +237,10 @@ export default function FilterScreen() {
                 {selectedBreeds.length > 0 && (
                     <View className="flex-row flex-wrap gap-2 mb-2">
                         {selectedBreeds.map(breed => (
-                            <View key={breed} className="flex-row items-center bg-[#EAC16C]/10 border border-[#EAC16C]/30 px-3 py-1.5 rounded-full">
-                                <Text className="text-[#EAC16C] text-sm mr-2">{breed}</Text>
+                            <View key={breed} className="flex-row items-center bg-[#416834]/10 border border-[#416834]/30 px-3 py-1.5 rounded-full">
+                                <Text className="text-[#416834] text-sm mr-2">{breed}</Text>
                                 <TouchableOpacity onPress={() => setSelectedBreeds(prev => prev.filter(b => b !== breed))}>
-                                    <Ionicons name="close-circle" size={16} color="#EAC16C" />
+                                    <Ionicons name="close-circle" size={16} color="#416834" />
                                 </TouchableOpacity>
                             </View>
                         ))}
@@ -345,7 +345,7 @@ export default function FilterScreen() {
                 >
                     <TouchableOpacity
                         onPress={applyFilters}
-                        className="bg-[#EAC16C] rounded-2xl py-4 items-center justify-center"
+                        className="bg-[#416834] rounded-2xl py-4 items-center justify-center"
                     >
                         <Text className="text-[#3B2F15] font-bold text-base">
                             Apply Filters
@@ -364,15 +364,15 @@ export default function FilterScreen() {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     className="flex-1 bg-black/90 justify-end"
                 >
-                    <View className="bg-[#07141D] h-[80%] rounded-t-3xl p-5 border-t border-[#3A4A55]">
+                    <View className="bg-[#FFFFFF] h-[80%] rounded-t-3xl p-5 border-t border-[#3A4A55]">
                         <View className="flex-row justify-between items-center mb-5">
-                            <Text className="text-[#EAC16C] text-xl font-bold">Select Breeds</Text>
+                            <Text className="text-[#416834] text-xl font-bold">Select Breeds</Text>
                             <TouchableOpacity onPress={() => setBreedModalVisible(false)}>
                                 <Ionicons name="close" size={28} color="#888" />
                             </TouchableOpacity>
                         </View>
                         
-                        <View className="flex-row items-center bg-[#1C2B35] rounded-xl px-4 py-2 mb-4 border border-[#2A3A45]">
+                        <View className="flex-row items-center bg-[#F2F4F7] rounded-xl px-4 py-2 mb-4 border border-[#2A3A45]">
                             <Ionicons name="search" size={20} color="#888" />
                             <TextInput
                                 className="flex-1 text-[#DDE6F0] text-base ml-2 py-2"
@@ -406,10 +406,10 @@ export default function FilterScreen() {
                                             }
                                         }}
                                     >
-                                        <Text className={isSelected ? "text-[#EAC16C] font-semibold text-base" : "text-[#DDE6F0] text-base"}>
+                                        <Text className={isSelected ? "text-[#416834] font-semibold text-base" : "text-[#DDE6F0] text-base"}>
                                             {item}
                                         </Text>
-                                        <View className={`w-6 h-6 rounded-md border items-center justify-center ${isSelected ? "bg-[#EAC16C] border-[#EAC16C]" : "border-gray-500"}`}>
+                                        <View className={`w-6 h-6 rounded-md border items-center justify-center ${isSelected ? "bg-[#416834] border-[#416834]" : "border-gray-500"}`}>
                                             {isSelected && <Ionicons name="checkmark" size={16} color="black" />}
                                         </View>
                                     </TouchableOpacity>
@@ -424,7 +424,7 @@ export default function FilterScreen() {
                         
                         <TouchableOpacity
                             onPress={() => setBreedModalVisible(false)}
-                            className="bg-[#EAC16C] rounded-2xl py-4 items-center justify-center mt-4"
+                            className="bg-[#416834] rounded-2xl py-4 items-center justify-center mt-4"
                         >
                             <Text className="text-[#3B2F15] font-bold text-base">Done</Text>
                         </TouchableOpacity>

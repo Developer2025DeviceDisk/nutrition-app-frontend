@@ -1,186 +1,66 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
-import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
-import { API_URL, BASE_URL } from '../../../constants/api';
+import { API_URL } from '../../../constants/api';
+import { getUploadableUri } from '../../../utils/fileUpload';
 
-export default function ChatScreen() {
+export default function ScanScreen() {
   const router = useRouter();
-  const { token, user } = useAuth();
-  const [matches, setMatches] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("Find Mate Chats");
+  const { token } = useAuth();
+  const [uploading, setUploading] = useState(false);
 
-  const fetchMatches = async () => {
-    try {
-      const response = await fetch(`${API_URL}/user/matches`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setMatches(data.matches);
-      }
-    } catch (error) {
-      console.error('Error fetching matches:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const openCamera = () => {
+    router.push('/camera' as any);
   };
-
-  useEffect(() => {
-    fetchMatches();
-  }, [token]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchMatches();
-  }, [token]);
-
-  const renderMatchItem = ({ item, index }: { item: any, index: number }) => {
-    // Find the other user and pet
-    const otherUser = item.users.find((u: any) => u._id !== user?._id);
-    const otherPet = item.pets.find((p: any) => p.owner && p.owner !== user?._id);
-    
-    // Check if there is a real last message
-    const lastMessage = item.lastMessage;
-    const messageText = lastMessage?.content || `Matched with ${otherPet?.petName || 'their pet'}!`;
-    
-    // Format the time if available
-    let timeString = "";
-    if (lastMessage?.createdAt) {
-      const date = new Date(lastMessage.createdAt);
-      timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (item.createdAt) {
-      const matchDate = new Date(item.createdAt);
-      timeString = matchDate.toLocaleDateString();
-    }
-    
-    // Temporary active layout simulation
-    const isActive = index === 1;
-
-    return (
-      <TouchableOpacity
-        className={`flex-row items-center py-4 px-5 ${isActive ? 'bg-[#3A4A55]/40 border-y border-white/5' : ''}`}
-        onPress={() => router.push({
-            pathname: `/chat/${item._id}` as any,
-            params: {
-                petName: otherPet?.petName || 'Pet',
-                ownerName: otherUser?.fullName || 'Owner'
-            }
-        })}
-        activeOpacity={0.7}
-      >
-        <View className="relative mr-4 w-14 h-14 rounded-full overflow-hidden">
-            <Image
-            source={{ 
-                uri: otherPet?.images && otherPet.images.length > 0 
-                  ? `${BASE_URL}${otherPet.images[0].replace(/\\/g, '/')}` 
-                  : (otherUser?.profileImage ? `${BASE_URL}${otherUser.profileImage}` : 'https://images.unsplash.com/photo-1552053831-71594a27632d') 
-            }}
-            className="w-full h-full"
-            style={{ width: 56, height: 56 }}
-            contentFit="cover"
-            />
-            {/* Soft inner shadow/glow simulating the design could be done via CSS or wrapper, keeping it clean for now */}
-        </View>
-
-        <View className="flex-1 justify-center">
-            <Text className="text-[#DDE6F0] text-[17px] tracking-wide mb-1.5 flex-row">
-                {otherUser?.fullName || 'Pet Owner'} 
-                <Text className="text-[#DDE6F0] opacity-80"> ({otherPet?.petName ? `${otherPet.petName}'s owner` : 'Owner'})</Text>
-            </Text>
-            <Text className="text-[#888] text-[15px] tracking-wide font-normal" numberOfLines={1}>
-                {messageText}
-            </Text>
-        </View>
-
-        <View className="items-end justify-start h-full pl-2 pb-5">
-            <Text className="text-[#888] text-[13px] tracking-wider uppercase">
-                {timeString}
-            </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  if (loading) {
-    return (
-      <LinearGradient colors={["#0E1514", "#4D4639"]} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}>
-        <ActivityIndicator size="large" color="#D8C4A0" />
-      </LinearGradient>
-    );
-  }
 
   return (
-    <LinearGradient colors={["#0E1514", "#4D4639"]} style={{ flex: 1, paddingTop: 56 }} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}>
-      {/* Header Toggle */}
-      <View className="px-5 mb-6 mt-2">
-        <View className="bg-[#3A4A55]/60 rounded-[30px] flex-row p-1 border border-white/5">
-            <TouchableOpacity
-                onPress={() => setSelectedTab("Find Mate Chats")}
-                className={`flex-1 py-3.5 rounded-[25px] items-center ${
-                    selectedTab === "Find Mate Chats" ? "bg-primary" : ""
-                }`}
-            >
-                <Text className={`text-[15px] tracking-wide ${
-                    selectedTab === "Find Mate Chats" ? "text-[#3B2F15] font-semibold" : "text-[#DDE6F0]/70 font-medium"
-                }`}>
-                    Find Mate Chats
-                </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-                onPress={() => setSelectedTab("Play Date Chats")}
-                className={`flex-1 py-3.5 rounded-[25px] items-center ${
-                    selectedTab === "Play Date Chats" ? "bg-primary" : ""
-                }`}
-            >
-                <Text className={`text-[15px] tracking-wide ${
-                    selectedTab === "Play Date Chats" ? "text-[#3B2F15] font-semibold" : "text-[#DDE6F0]/70 font-medium"
-                }`}>
-                    Play Date Chats
-                </Text>
-            </TouchableOpacity>
-        </View>
-      </View>
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <ScrollView className="flex-1 px-8 pt-10">
+        <Text className="text-[#191D17] text-3xl font-bold mb-4">Scan Food</Text>
+        <Text className="text-[#8C8C8C] text-base mb-10 leading-6">
+          Capture a clear photo of your meal to automatically detect nutrition facts and track your daily intake.
+        </Text>
 
-      {/* List */}
-      <View className="flex-1 mt-2">
-        {matches.filter(m => m.category === selectedTab.replace(" Chats", "")).length > 0 ? (
-            <FlatList
-            data={matches.filter(m => m.category === selectedTab.replace(" Chats", ""))}
-            keyExtractor={(item) => item._id}
-            renderItem={renderMatchItem}
-            className="flex-1"
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#D8C4A0" />
-            }
-            />
-        ) : (
-            <View className="flex-1 justify-center items-center px-10 pb-20">
-            <View className="bg-[#3A4A55]/30 p-8 rounded-full mb-5">
-                <Ionicons name="chatbubbles-outline" size={50} color="#D8C4A0" />
+        {/* Scan Button Area */}
+        <TouchableOpacity 
+            onPress={openCamera}
+            activeOpacity={0.8}
+            className="w-full aspect-square bg-[#F8F9F5] border-2 border-dashed border-[#416834]/30 rounded-[40px] items-center justify-center mb-10"
+        >
+            <View className="w-24 h-24 bg-[#416834] rounded-full items-center justify-center shadow-lg shadow-[#416834]/30">
+                <Ionicons name="camera" size={48} color="white" />
             </View>
-            <Text className="text-[#DDE6F0] text-xl font-semibold mb-2">No chats yet</Text>
-            <Text className="text-[#888] text-center text-base leading-6">
-                When you match with others, your conversations will appear here.
-            </Text>
-            <TouchableOpacity
-                className="bg-primary px-8 py-3.5 rounded-full mt-6"
-                onPress={() => router.push('/(tabs)/' as any)}
-            >
-                <Text className="text-[#3B2F15] font-semibold">Start Swiping</Text>
-            </TouchableOpacity>
-            </View>
+            <Text className="text-[#416834] text-lg font-bold mt-6">Open Camera</Text>
+        </TouchableOpacity>
+
+        {/* Tips */}
+        <View className="bg-[#F0F2EB] p-6 rounded-[24px]">
+            <Text className="text-[#191D17] text-lg font-bold mb-4">Scanning Tips</Text>
+            <TipItem icon="sunny-outline" text="Ensure good lighting for better accuracy" />
+            <TipItem icon="resize-outline" text="Center the food in the frame" />
+            <TipItem icon="phone-portrait-outline" text="Hold your phone steady" />
+        </View>
+
+        {uploading && (
+          <View className="absolute inset-0 bg-white/70 justify-center items-center rounded-3xl">
+            <ActivityIndicator size="large" color="#416834" />
+            <Text className="mt-4 text-[#416834] font-bold text-lg">Analyzing Food...</Text>
+          </View>
         )}
-      </View>
-    </LinearGradient>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const TipItem = ({ icon, text }: any) => (
+    <View className="flex-row items-center mb-4">
+        <View className="w-8 h-8 rounded-full bg-white justify-center items-center mr-3">
+            <Ionicons name={icon} size={16} color="#416834" />
+        </View>
+        <Text className="text-[#191D17] text-sm font-medium flex-1">{text}</Text>
+    </View>
+);
