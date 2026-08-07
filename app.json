@@ -22,10 +22,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -48,7 +45,15 @@
           "photosPermission": "The app accesses your photos to let you share your pet's images.",
           "cameraPermission": "The app accesses your camera to let you take photos of your pet."
         }
-      ]
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "The app accesses your camera to scan and analyze food."
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
