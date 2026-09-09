@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { BASE_URL, API_URL } from '../../../constants/api';
 export default function AnalysisScreen() {
   const { user, token, logout } = useAuth();
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [dailyStats, setDailyStats] = useState({
       calories: 0,
@@ -48,10 +49,50 @@ export default function AnalysisScreen() {
   const handleLogout = async () => {
     try {
         await logout();
-        // Force navigation to onboarding
         router.replace('/(auth)/' as any);
     } catch (error) {
         console.error("Logout failed", error);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: confirmDeleteAccount,
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`${API_URL}/auth/delete-account`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Error", data.message || "Failed to delete account. Please try again.");
+        return;
+      }
+
+      // Clear local session and go to login
+      await logout();
+      router.replace('/(auth)/' as any);
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+      console.error("Delete account failed", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -95,10 +136,23 @@ export default function AnalysisScreen() {
         <TouchableOpacity 
             activeOpacity={0.7}
             onPress={handleLogout}
-            className="mt-10 mb-20 flex-row items-center justify-center p-5 bg-[#FFF0F0] rounded-[24px] border border-[#FFDADA]"
+            className="mt-10 flex-row items-center justify-center p-5 bg-[#FFF0F0] rounded-[24px] border border-[#FFDADA]"
         >
             <Ionicons name="log-out-outline" size={24} color="#FF4D4D" />
             <Text className="text-[#FF4D4D] text-lg font-bold ml-3">Logout</Text>
+        </TouchableOpacity>
+
+        {/* Delete Account Button */}
+        <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleDeleteAccount}
+            disabled={isDeleting}
+            className="mt-4 mb-20 flex-row items-center justify-center p-5 bg-white rounded-[24px] border border-[#FF4D4D]"
+        >
+            <Ionicons name="trash-outline" size={22} color="#CC0000" />
+            <Text className="text-[#CC0000] text-base font-semibold ml-3">
+              {isDeleting ? "Deleting..." : "Delete Account"}
+            </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

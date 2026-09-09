@@ -1,6 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Toast, { ToastConfig } from 'react-native-toast-message';
 import { Ionicons } from "@expo/vector-icons";
@@ -49,11 +50,13 @@ function InitialLayout() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <InitialLayout />
-      <Toast config={toastConfig} />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <InitialLayout />
+        <Toast config={toastConfig} />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

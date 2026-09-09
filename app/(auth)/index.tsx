@@ -40,15 +40,7 @@ export default function Index() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            className="bg-white py-2 rounded-[12px] items-center border border-border flex-row justify-center gap-3"
-            onPress={() => { }} // Handle Google Login
-          >
-            <AntDesign name="google" size={20} color="#416834" />
-            <Text className="text-primary font-semibold text-lg">
-              Continue with google
-            </Text>
-          </TouchableOpacity>
+
         </View>
 
         {/* Legal Disclaimer */}

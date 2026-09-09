@@ -380,6 +380,7 @@ export default function FilterScreen() {
                                 placeholderTextColor="#888"
                                 value={breedSearch}
                                 onChangeText={setBreedSearch}
+                                returnKeyType="search"
                                 autoCorrect={false}
                             />
                             {breedSearch.length > 0 && (

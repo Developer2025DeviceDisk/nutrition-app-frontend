@@ -7,6 +7,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
     Alert,
     ActivityIndicator,
@@ -15,6 +16,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
+    Keyboard,
 } from "react-native";
 import { Image } from "expo-image";
 import { API_URL } from "../../constants/api";
@@ -227,6 +229,7 @@ export default function PetDetails() {
                             placeholderTextColor="#888"
                             value={breedSearch}
                             onChangeText={setBreedSearch}
+                            returnKeyType="search"
                             autoCorrect={false}
                         />
                         {breedSearch.length > 0 && (
@@ -266,6 +269,11 @@ export default function PetDetails() {
     );
 
     return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1 bg-background"
+        >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View className="flex-1 bg-background">
             <ScrollView
                 contentContainerStyle={{ padding: 25, paddingTop: 60 }}
@@ -367,6 +375,8 @@ export default function PetDetails() {
                         className="text-text text-[15px] py-2"
                         placeholder="Pet Name*"
                         placeholderTextColor="#888"
+                        returnKeyType="done"
+                        onSubmitEditing={Keyboard.dismiss}
                         value={petName}
                         onChangeText={(text) => setPetName(text.replace(/[^a-zA-Z\s]/g, ""))}
                     />
@@ -438,6 +448,8 @@ export default function PetDetails() {
             {/* Modals */}
             {renderBreedModal()}
         </View>
+        </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 }
 

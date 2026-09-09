@@ -1,39 +1,43 @@
 {
   "expo": {
-    "name": "petBuddies",
-    "slug": "petBuddies",
-    "version": "1.0.0",
+    "name": "Bitewise",
+    "slug": "Bitewise",
+    "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "petbuddies",
+    "icon": "./assets/images/bitwiselogo.jpeg",
+    "scheme": "Bitewise",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "y",
+      "bundleIdentifier": "com.bitewise",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.sarkar_expo.petBuddies",
+      "package": "com.bitewise",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/bitwiselogo.jpeg",
+        "backgroundImage": "./assets/images/bitwiselogo.jpeg",
+        "monochromeImage": "./assets/images/bitwiselogo.jpeg"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/bitwiselogo.jpeg"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/bitwiselogo.jpeg",
           "imageWidth": 200,
           "backgroundColor": "#ffffff",
           "resizeMode": "contain"
@@ -62,9 +66,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "01c6bf1d-f13e-48a2-8f94-70c3c0362a0e"
+        "projectId": "b627c8ff-4754-494b-85e8-a4172ff34171"
       }
-    },
-    "owner": "exposumit_123"
+    }
   }
 }

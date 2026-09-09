@@ -93,7 +93,11 @@ export default function CameraScreen() {
         }
       } catch (error) {
         console.error('Capture error:', error);
-        Alert.alert('Error', 'Failed to capture photo. Please try again.');
+        Alert.alert(
+          'Error',
+          'Failed to capture photo. Please try again.\n\nError details: ' +
+          (error instanceof Error ? error.message : String(error))
+        );
       }
     }
   };
